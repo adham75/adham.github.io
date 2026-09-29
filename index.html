@@ -47,7 +47,7 @@
   h2 { font-size: 1.4rem; margin-bottom: 16px; }
   h2::before { content: "> "; color: var(--accent); }
 
-  p.desc { color: var(--text-muted); }
+  p.desc { color: var(--text-muted); margin-bottom: 12px; }
 
   .card {
     background: var(--bg-card);
@@ -72,6 +72,20 @@
     border-radius: 12px;
     padding: 2px 10px;
   }
+  .card .lire {
+    display: inline-block;
+    margin-top: 14px;
+    color: var(--accent);
+    text-decoration: none;
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    padding: 7px 14px;
+    font-size: 0.92rem;
+    font-weight: 600;
+  }
+  .card .lire:hover {
+    border-color: var(--accent);
+  }
 
   footer {
     padding: 24px 0 40px;
@@ -84,12 +98,10 @@
 <div class="container">
 
   <header>
-    <!-- Remplacez VOTRE_NOM et votre titre ci-dessous -->
-    <h1>BAOMAR Adham<span></span></h1>
-    <p class="subtitle">Ingenieur Cybersecurité – Active Directory & Identity Security</p>
+    <h1>BAOMAR Adham<span>_</span></h1>
+    <p class="subtitle">Ingénieur Cybersécurité — Active Directory &amp; Identity Security</p>
     <nav>
-      <!-- Remplacez les URLs ci-dessous par vos vrais liens -->
-      <a href="https://github.com/VOTRE_PSEUDO" target="_blank" rel="noopener">GitHub</a>
+      <a href="https://github.com/adham75" target="_blank" rel="noopener">GitHub</a>
       <a href="https://www.linkedin.com/in/adham-baomar/" target="_blank" rel="noopener">LinkedIn</a>
       <a href="mailto:adham.baomar9@gmail.com">Contact</a>
       <a href="#cv">CV</a>
@@ -99,28 +111,27 @@
 
   <main>
 
-   <section id="apropos">
-  <h2>À propos</h2>
-  <p class="desc">
-    Ingénieur Cybersécurité spécialisé Active Directory &amp; Identity Security,
-    avec plus de 8 ans d'expérience sur des infrastructures IT critiques
-    (Thales, défense, secteur public). Intervenu en mission de remédiation
-    AD complète : score PingCastle réduit de 100 à 20 points, remédiation
-    ESC1/ESC4, durcissement NTLMv1, Protected Users, RPC/Coercion.
-  </p>
-  <p class="desc">
-    Expertise en architecture AD avancée : Tiering Model T0/T1/T2,
-    Authentication Policy Silos, Kerberos Armoring. Mon background DevOps
-    (Ansible, Terraform, CI/CD) apporte une approche infrastructure-as-code
-    à la sécurité. Habitué au reporting RSSI et à la documentation technique.
-  </p>
-</section>
+    <section id="apropos">
+      <h2>À propos</h2>
+      <p class="desc">
+        Ingénieur Cybersécurité spécialisé Active Directory &amp; Identity Security,
+        avec plus de 8 ans d'expérience sur des infrastructures IT critiques
+        (Thales, défense, secteur public). Intervenu en mission de remédiation
+        AD complète : score PingCastle réduit de 100 à 20 points, remédiation
+        ESC1/ESC4, durcissement NTLMv1, Protected Users, RPC/Coercion.
+      </p>
+      <p class="desc">
+        Expertise en architecture AD avancée : Tiering Model T0/T1/T2,
+        Authentication Policy Silos, Kerberos Armoring. Mon background DevOps
+        (Ansible, Terraform, CI/CD) apporte une approche infrastructure-as-code
+        à la sécurité. Habitué au reporting RSSI et à la documentation technique.
+      </p>
+    </section>
 
     <section id="cv">
       <h2>CV</h2>
       <p class="desc">
         Consultez mon parcours complet.
-        <!-- Placez votre fichier cv.pdf à la racine du dépôt, à côté de cet index.html -->
         <a href="CV_Adham_BAOMAR_2026_ATS.pdf" style="color: var(--accent);">Télécharger le CV (PDF)</a>
       </p>
     </section>
@@ -130,20 +141,22 @@
 
       <div class="card">
         <h3>AD-LAB</h3>
-        <p class="domaine">Domaine interne : SECURITY.LAB</p>
-        <!-- Décrivez ici ce que vous avez réellement fait dans le lab -->
+        <p class="domaine">Domaine interne : security.local</p>
         <p>
-          Conception et déploiement d'un laboratoire
-          Active Directory complet : contrôleur de domaine, postes clients,
-          stratégies de groupe (GPO) et scénarios d'attaque/défense.
+          Conception et sécurisation complète d'un Active Directory (9 VMs, VMware ESXi) :
+          2 contrôleurs de domaine, PKI d'entreprise à 2 niveaux avec root CA hors-ligne,
+          tiering Kerberos T0/T1/T2 avec silos d'authentification et Protected Users.
+          Score PingCastle réduit de 90 à 20.
         </p>
         <div class="tags">
-          <!-- Adaptez les tags à votre stack réelle -->
           <span class="tag">Active Directory</span>
-          <span class="tag">Windows Server</span>
-          <span class="tag">GPO</span>
-          <span class="tag">Virtualisation</span>
+          <span class="tag">AD CS / PKI</span>
+          <span class="tag">Kerberos (silos, FAST)</span>
+          <span class="tag">Tiering &amp; PAW</span>
+          <span class="tag">PingCastle</span>
+          <span class="tag">PowerShell</span>
         </div>
+        <a class="lire" href="ad-lab.html">Lire le writeup complet →</a>
       </div>
 
       <!-- Pour ajouter un projet : copiez-collez le bloc .card ci-dessus -->
