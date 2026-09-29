@@ -1,0 +1,249 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>AD-LAB — Sécurisation d'un Active Directory de A à Z | Adham BAOMAR</title>
+<style>
+  :root {
+    --bg: #0f172a; --card: #1e293b; --text: #e2e8f0; --muted: #94a3b8;
+    --accent: #38bdf8; --accent2: #34d399; --border: #334155;
+  }
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body {
+    font-family: -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+    background: var(--bg); color: var(--text); line-height: 1.65;
+  }
+  .container { max-width: 900px; margin: 0 auto; padding: 3rem 1.5rem; }
+  header { border-bottom: 1px solid var(--border); padding-bottom: 2rem; margin-bottom: 2.5rem; }
+  .kicker { color: var(--accent); font-weight: 600; letter-spacing: .12em; text-transform: uppercase; font-size: .8rem; }
+  h1 { font-size: 2.2rem; line-height: 1.2; margin: .5rem 0 1rem; }
+  .meta { color: var(--muted); font-size: .95rem; }
+  .pitch {
+    background: var(--card); border-left: 4px solid var(--accent); border-radius: 0 8px 8px 0;
+    padding: 1.2rem 1.5rem; font-size: 1.08rem; margin: 2rem 0;
+  }
+  .metrics { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 1rem; margin: 2rem 0; }
+  .metric { background: var(--card); border: 1px solid var(--border); border-radius: 10px; padding: 1.1rem; text-align: center; }
+  .metric .value { font-size: 1.7rem; font-weight: 700; color: var(--accent2); }
+  .metric .label { color: var(--muted); font-size: .85rem; margin-top: .25rem; }
+  h2 { font-size: 1.4rem; margin: 2.5rem 0 1rem; color: var(--accent); }
+  table { width: 100%; border-collapse: collapse; margin: 1rem 0; font-size: .95rem; }
+  th, td { text-align: left; padding: .6rem .8rem; border-bottom: 1px solid var(--border); }
+  th { color: var(--muted); font-weight: 600; text-transform: uppercase; font-size: .75rem; letter-spacing: .06em; }
+  td:last-child { color: var(--muted); }
+  ul { padding-left: 1.3rem; }
+  li { margin: .55rem 0; }
+  li strong { color: var(--accent2); }
+  .arch-figure { margin: 1.5rem 0; }
+  .arch-figure svg { width: 100%; height: auto; border-radius: 10px; display: block; }
+  .incidents { display: grid; gap: 1rem; }
+  .incident { background: var(--card); border: 1px solid var(--border); border-radius: 10px; padding: 1.2rem 1.4rem; }
+  .incident h3 { font-size: 1.02rem; color: var(--accent); margin-bottom: .4rem; }
+  .incident p { color: var(--muted); font-size: .95rem; }
+  .tags { display: flex; flex-wrap: wrap; gap: .5rem; margin-top: 1rem; }
+  .tag {
+    background: rgba(56,189,248,.12); color: var(--accent); border: 1px solid rgba(56,189,248,.35);
+    border-radius: 999px; padding: .3rem .85rem; font-size: .82rem; font-family: ui-monospace, Consolas, monospace;
+  }
+  footer { margin-top: 3rem; padding-top: 1.5rem; border-top: 1px solid var(--border); color: var(--muted); font-size: .88rem; }
+  footer a { color: var(--accent); text-decoration: none; }
+  footer a:hover { text-decoration: underline; }
+  .arrow { color: var(--accent2); font-weight: 700; }
+</style>
+</head>
+<body>
+<div class="container">
+
+  <header>
+    <div class="kicker">Projet personnel · Sécurité Active Directory</div>
+    <h1>AD-LAB — Sécurisation d'un Active Directory de A à Z</h1>
+    <div class="meta">Adham BAOMAR &middot; août–septembre 2026 &middot; domaine <strong>security.local</strong> &middot; VMware ESXi &middot; Windows Server 2022 &middot; 9 VMs</div>
+  </header>
+
+  <div class="pitch">
+    Construire un AD multi-contrôleurs avec PKI d'entreprise à deux niveaux, puis le verrouiller par un
+    <strong>modèle de tiers Kerberos complet</strong> (silos d'authentification, FAST armoring, Protected Users) —
+    chaque contrôle prouvé par un test positif <em>et</em> un test négatif.
+  </div>
+
+  <div class="metrics">
+    <div class="metric"><div class="value">90 → 20</div><div class="label">Score de risque PingCastle</div></div>
+    <div class="metric"><div class="value">16 → 1</div><div class="label">Anomalies résiduelles</div></div>
+    <div class="metric"><div class="value">6</div><div class="label">Machines autorisées pour les TGT d'admin</div></div>
+    <div class="metric"><div class="value">60 min</div><div class="label">Durée de vie des tickets Kerberos admin</div></div>
+  </div>
+
+  <h2>Architecture</h2>
+
+  <div class="arch-figure">
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 960 650" font-family="-apple-system,'Segoe UI',Roboto,Arial,sans-serif" role="img" aria-label="Schéma d'architecture du lab : VLAN serveurs avec silos T0/T1, PKI hors-ligne, VLAN postes avec flux autorisés et refusés">
+    <defs>
+      <marker id="arrGreen" markerWidth="8" markerHeight="8" refX="7" refY="3" orient="auto">
+        <path d="M0,0 L7,3 L0,6 Z" fill="#34d399"/>
+      </marker>
+      <marker id="arrGray" markerWidth="8" markerHeight="8" refX="7" refY="3" orient="auto">
+        <path d="M0,0 L7,3 L0,6 Z" fill="#94a3b8"/>
+      </marker>
+      <marker id="arrBlue" markerWidth="8" markerHeight="8" refX="7" refY="3" orient="auto">
+        <path d="M0,0 L7,3 L0,6 Z" fill="#38bdf8"/>
+      </marker>
+    </defs>
+
+    <rect x="0" y="0" width="960" height="650" fill="#0f172a" rx="12"/>
+
+    <text x="30" y="36" fill="#e2e8f0" font-size="19" font-weight="700">Architecture AD-LAB — security.local</text>
+    <text x="30" y="54" fill="#94a3b8" font-size="11.5">VMware ESXi · Windows Server 2022 · tiering Kerberos (silos + FAST) · PKI 2 niveaux</text>
+
+    <!-- VLAN 30 -->
+    <rect x="20" y="68" width="920" height="430" fill="#16213b" stroke="#334155" stroke-width="1.5" rx="12"/>
+    <text x="38" y="92" fill="#38bdf8" font-size="12" font-weight="700" letter-spacing="1">VLAN 30 — SERVEURS · 10.0.30.0/24</text>
+
+    <!-- T0-Silo -->
+    <rect x="40" y="106" width="646" height="286" fill="none" stroke="#38bdf8" stroke-width="1.6" stroke-dasharray="7 5" rx="10"/>
+    <text x="56" y="126" fill="#38bdf8" font-size="11.5" font-weight="600">T0-SILO — Authentication Policy Silo (enforcé)</text>
+
+    <rect x="60" y="140" width="152" height="58" fill="#1e293b" stroke="#475569" stroke-width="1.2" rx="8"/>
+    <text x="136" y="164" fill="#e2e8f0" font-size="13" font-weight="700" text-anchor="middle">MSAD01</text>
+    <text x="136" y="181" fill="#94a3b8" font-size="10" text-anchor="middle">DC · FSMO · DNS</text>
+    <text x="136" y="193" fill="#64748b" font-size="9.5" text-anchor="middle">10.0.30.100</text>
+
+    <rect x="227" y="140" width="152" height="58" fill="#1e293b" stroke="#475569" stroke-width="1.2" rx="8"/>
+    <text x="303" y="164" fill="#e2e8f0" font-size="13" font-weight="700" text-anchor="middle">MS-AD02</text>
+    <text x="303" y="181" fill="#94a3b8" font-size="10" text-anchor="middle">DC · GC · DNS</text>
+    <text x="303" y="193" fill="#64748b" font-size="9.5" text-anchor="middle">10.0.30.101</text>
+
+    <rect x="394" y="140" width="152" height="58" fill="#1e293b" stroke="#475569" stroke-width="1.2" rx="8"/>
+    <text x="470" y="164" fill="#e2e8f0" font-size="13" font-weight="700" text-anchor="middle">PAW-T0</text>
+    <text x="470" y="181" fill="#94a3b8" font-size="10" text-anchor="middle">Poste d'admin T0</text>
+
+    <rect x="60" y="252" width="152" height="58" fill="#1e293b" stroke="#475569" stroke-width="1.2" rx="8"/>
+    <text x="136" y="276" fill="#e2e8f0" font-size="13" font-weight="700" text-anchor="middle">MS-SUBCA01</text>
+    <text x="136" y="293" fill="#94a3b8" font-size="10" text-anchor="middle">CA d'émission</text>
+
+    <rect x="227" y="252" width="152" height="58" fill="#1e293b" stroke="#475569" stroke-width="1.2" rx="8"/>
+    <text x="303" y="276" fill="#e2e8f0" font-size="13" font-weight="700" text-anchor="middle">MS-SUBCA02</text>
+    <text x="303" y="293" fill="#94a3b8" font-size="10" text-anchor="middle">CA d'émission · OCSP signing</text>
+
+    <rect x="394" y="252" width="152" height="58" fill="#1e293b" stroke="#475569" stroke-width="1.2" rx="8"/>
+    <text x="470" y="276" fill="#e2e8f0" font-size="12" font-weight="700" text-anchor="middle">MS-SERVICESCA01</text>
+    <text x="470" y="293" fill="#94a3b8" font-size="10" text-anchor="middle">CDP · AIA · OCSP (HTTP)</text>
+
+    <line x1="212" y1="169" x2="227" y2="169" stroke="#38bdf8" stroke-width="1.6" marker-end="url(#arrBlue)"/>
+    <line x1="227" y1="175" x2="212" y2="175" stroke="#38bdf8" stroke-width="1.6" marker-end="url(#arrBlue)"/>
+    <text x="219" y="132" fill="#38bdf8" font-size="9.5" text-anchor="middle">Réplication AD</text>
+
+    <text x="56" y="348" fill="#7dd3fc" font-size="10.5" font-style="italic">Un TGT admin T0 n'est délivré que depuis ces machines — FAST armoring · AES-256 · validité 60 min</text>
+
+    <!-- T1-Silo -->
+    <rect x="710" y="106" width="214" height="122" fill="none" stroke="#a78bfa" stroke-width="1.6" stroke-dasharray="7 5" rx="10"/>
+    <text x="724" y="126" fill="#a78bfa" font-size="11.5" font-weight="600">T1-SILO</text>
+    <rect x="724" y="140" width="152" height="58" fill="#1e293b" stroke="#475569" stroke-width="1.2" rx="8"/>
+    <text x="800" y="164" fill="#e2e8f0" font-size="13" font-weight="700" text-anchor="middle">PAW-T1</text>
+    <text x="800" y="181" fill="#94a3b8" font-size="10" text-anchor="middle">Poste d'admin T1</text>
+
+    <!-- Root CA hors-ligne -->
+    <rect x="710" y="262" width="214" height="66" fill="#1e293b" stroke="#f87171" stroke-width="1.6" stroke-dasharray="6 4" rx="8"/>
+    <text x="817" y="286" fill="#fca5a5" font-size="13" font-weight="700" text-anchor="middle">MS-ROOTCA01</text>
+    <text x="817" y="303" fill="#94a3b8" font-size="10" text-anchor="middle">Root CA — HORS-LIGNE (workgroup)</text>
+    <text x="817" y="316" fill="#64748b" font-size="9.5" text-anchor="middle">carte réseau déconnectée hors cérémonie</text>
+
+    <path d="M 710 295 C 620 295, 470 285, 379 281" fill="none" stroke="#94a3b8" stroke-width="1.4" stroke-dasharray="5 4" marker-end="url(#arrGray)"/>
+    <text x="556" y="272" fill="#94a3b8" font-size="9.5" text-anchor="middle">signature du .req (hors-ligne)</text>
+
+    <!-- VLAN 50 -->
+    <rect x="20" y="516" width="920" height="118" fill="#16213b" stroke="#334155" stroke-width="1.5" rx="12"/>
+    <text x="38" y="540" fill="#38bdf8" font-size="12" font-weight="700" letter-spacing="1">VLAN 50 — POSTES · 10.0.50.0/24</text>
+
+    <rect x="60" y="556" width="152" height="58" fill="#1e293b" stroke="#475569" stroke-width="1.2" rx="8"/>
+    <text x="136" y="580" fill="#e2e8f0" font-size="13" font-weight="700" text-anchor="middle">PC-T2</text>
+    <text x="136" y="597" fill="#94a3b8" font-size="10" text-anchor="middle">Client test (T2) · 10.0.50.101</text>
+
+    <path d="M 150 556 C 170 460, 400 400, 455 310" fill="none" stroke="#34d399" stroke-width="1.6" marker-end="url(#arrGreen)"/>
+    <text x="368" y="432" fill="#34d399" font-size="10" text-anchor="middle">HTTP : CRL / OCSP</text>
+
+    <path d="M 120 556 C 100 470, 105 390, 125 310" fill="none" stroke="#34d399" stroke-width="1.6" marker-end="url(#arrGreen)"/>
+    <text x="66" y="428" fill="#34d399" font-size="10" text-anchor="middle">Auto-enrollment</text>
+    <text x="66" y="441" fill="#34d399" font-size="10" text-anchor="middle">(TGS autorisé)</text>
+
+    <path d="M 205 556 C 260 480, 300 430, 320 392" fill="none" stroke="#f87171" stroke-width="1.7" stroke-dasharray="6 4"/>
+    <text x="322" y="384" fill="#f87171" font-size="15" font-weight="700" text-anchor="middle">✕</text>
+    <text x="290" y="470" fill="#f87171" font-size="10" text-anchor="middle">Logon admin T0/T1 : TGT refusé</text>
+    <text x="290" y="483" fill="#f87171" font-size="10" text-anchor="middle">par le KDC (erreur 1327)</text>
+
+    <rect x="590" y="528" width="334" height="94" fill="#0f172a" stroke="#334155" rx="8"/>
+    <text x="604" y="548" fill="#e2e8f0" font-size="11" font-weight="700">LÉGENDE</text>
+    <line x1="604" y1="566" x2="640" y2="566" stroke="#34d399" stroke-width="1.8"/>
+    <text x="648" y="570" fill="#94a3b8" font-size="10">Flux autorisé (TGS / HTTP)</text>
+    <line x1="604" y1="586" x2="640" y2="586" stroke="#f87171" stroke-width="1.8" stroke-dasharray="6 4"/>
+    <text x="648" y="590" fill="#94a3b8" font-size="10">Refusé par le silo (AS/TGT)</text>
+    <line x1="604" y1="606" x2="640" y2="606" stroke="#94a3b8" stroke-width="1.4" stroke-dasharray="5 4"/>
+    <text x="648" y="610" fill="#94a3b8" font-size="10">Cérémonie hors-ligne · cadres pointillés = silos</text>
+  </svg>
+  </div>
+
+  <table>
+    <tr><th>Composant</th><th>Détail</th></tr>
+    <tr><td>Domaine</td><td>security.local — DFL/FFL Windows 2016, 2 contrôleurs de domaine</td></tr>
+    <tr><td>Hyperviseur</td><td>VMware ESXi / vCenter — VLAN serveurs (10.0.30.0/24) / VLAN postes (10.0.50.0/24)</td></tr>
+    <tr><td>Annuaire</td><td>Réplication et bascule validées par panne simulée du DC principal</td></tr>
+    <tr><td>PKI</td><td>Root CA <strong>hors-ligne</strong> + 2 CA subordonnées d'entreprise + publication HTTP/OCSP</td></tr>
+    <tr><td>Administration</td><td>PAW dédiées par tier (T0/T1), poste client de test (T2)</td></tr>
+  </table>
+
+  <h2>Ce que j'ai construit et prouvé</h2>
+  <ul>
+    <li><strong>Résilience AD</strong> — second DC, réplication saine, continuité d'authentification testée par coupure réelle du DC principal</li>
+    <li><strong>PKI à deux niveaux</strong> — Root isolée du réseau, auto-enrollment par GPO, révocation validée de bout en bout (jusqu'au refus client via OCSP)</li>
+    <li><strong>Tiering Kerberos</strong> — un admin T0 ne peut obtenir de ticket que depuis une machine T0 : refus explicite depuis un poste hors silo, armure FAST vérifiée sur le fil (<code>PRIMARY FAST</code>, AES-256)</li>
+    <li><strong>NTLM éliminé</strong> pour les comptes d'administration (Protected Users) — accès SMB refusé en NTLM, accepté en Kerberos</li>
+    <li><strong>Détection</strong> — indicateur de refus de silo identifié et validé (event 4768, statut <code>0xC</code>)</li>
+    <li><strong>Sauvegarde AD</strong> — System State validé, règle PingCastle associée soldée</li>
+  </ul>
+
+  <h2>Trois incidents, trois leçons</h2>
+  <div class="incidents">
+    <div class="incident">
+      <h3>Le test de bascule qui « échouait »</h3>
+      <p>La faute au cache du DC Locator côté client, pas à la réplication. Un classique des audits de résilience réels — et un point de contrôle souvent oublié.</p>
+    </div>
+    <div class="incident">
+      <h3>Le silo « enforcé » qui ne bloquait rien</h3>
+      <p>Un audit préalable a révélé que la condition d'origine n'avait jamais été posée : l'appartenance à un silo seule ne restreint rien. Réparation ciblée, zéro reconstruction.</p>
+    </div>
+    <div class="incident">
+      <h3>L'alerte qui accusait le compte Administrateur</h3>
+      <p>La forensique des journaux a montré… mon propre contournement : bloqué par le silo, j'avais utilisé le compte break-glass pour une copie de fichier. La sécurité a fonctionné ; c'est le workflow qu'il a fallu corriger.</p>
+    </div>
+  </div>
+
+  <h2>Résultats mesurés</h2>
+  <table>
+    <tr><th>Indicateur</th><th>Avant</th><th>Après</th></tr>
+    <tr><td>Score de risque PingCastle</td><td>90</td><td><span class="arrow">20</span> (reste : compte natif en cours de purge)</td></tr>
+    <tr><td>Anomalies</td><td>16</td><td><span class="arrow">1</span></td></tr>
+    <tr><td>Règle « KDC sans armoring Kerberos »</td><td>présente</td><td><span class="arrow">éliminée</span></td></tr>
+    <tr><td>Couverture des TGT d'administration</td><td>domaine entier</td><td><span class="arrow">6 machines autorisées</span>, 60 min de validité</td></tr>
+  </table>
+
+  <h2>Stack &amp; compétences</h2>
+  <div class="tags">
+    <span class="tag">Active Directory</span>
+    <span class="tag">AD CS / PKI</span>
+    <span class="tag">Kerberos (silos, FAST)</span>
+    <span class="tag">GPO de sécurité</span>
+    <span class="tag">Tiering / PAW</span>
+    <span class="tag">PingCastle</span>
+    <span class="tag">PowerShell</span>
+    <span class="tag">Forensique d'authentification</span>
+    <span class="tag">Méthodologie MO/CR avec rollback</span>
+  </div>
+
+  <footer>
+    Documentation complète (modes opératoires + comptes rendus avec preuves) disponible sur demande.
+    <!-- Personnalise tes liens ici : <a href="https://www.linkedin.com/in/...">LinkedIn</a> · <a href="https://github.com/...">GitHub</a> · <a href="mailto:...">Contact</a> -->
+  </footer>
+
+</div>
+</body>
+</html>
